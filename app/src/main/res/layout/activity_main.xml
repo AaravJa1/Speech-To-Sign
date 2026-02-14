@@ -1,23 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp">
+    android:background="#121212"
+    android:padding="20dp">
 
     <TextView
-        android:id="@+id/tvResult"
+        android:id="@+id/tvHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Press button to speak"
+        android:layout_marginTop="20dp"
+        android:text="Speech to Sign"
+        android:textColor="#FFFFFF"
         android:textSize="24sp"
-        android:layout_marginBottom="32dp"/>
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginVertical="30dp"
+        app:cardBackgroundColor="#1E1E1E"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnSpeak"
+        app:layout_constraintTop_toBottomOf="@+id/tvHeader">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <VideoView
+                android:id="@+id/avatarVideoView"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_marginBottom="20dp" />
+
+            <TextView
+                android:id="@+id/tvResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="Press the mic to start"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/tvMissing"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text=""
+                android:textColor="#CF6679" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSpeak"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Speak Now" />
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginBottom="30dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        app:backgroundTint="#03DAC5"
+        app:cornerRadius="35dp"
+        app:icon="@drawable/ic_mic"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconSize="32dp"
+        app:iconTint="#121212"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
