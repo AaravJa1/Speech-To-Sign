@@ -1,84 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/loginContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="32dp"
     android:gravity="center"
-    android:background="#0A0A0A"> <TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="SYSTEM_LOGIN"
-    android:textSize="36sp"
-    android:textStyle="bold"
-    android:textColor="#03DAC5"
-    android:fontFamily="monospace"
-    android:layout_marginBottom="40dp"/>
+    android:background="#121212">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome Back"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="40dp"/>
 
     <EditText
         android:id="@+id/etEmail"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="USER_IDENTIFICATION (Email)"
-        android:textColorHint="#555555"
+        android:layout_height="52dp"
+        android:hint="Email"
+        android:textColorHint="#888888"
         android:textColor="#FFFFFF"
         android:inputType="textEmailAddress"
-        android:backgroundTint="#FF007F"
-        android:fontFamily="monospace"
-        android:minHeight="48dp"
+        android:background="@drawable/bg_rounded_input"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/etPassword"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="SECURITY_KEY (Password)"
-        android:textColorHint="#555555"
+        android:layout_height="52dp"
+        android:hint="Password"
+        android:textColorHint="#888888"
         android:textColor="#FFFFFF"
         android:inputType="textPassword"
-        android:backgroundTint="#FF007F"
-        android:fontFamily="monospace"
-        android:minHeight="48dp"
+        android:background="@drawable/bg_rounded_input"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:layout_marginBottom="32dp"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="INITIATE LOGIN"
-        android:textColor="#000000"
+        android:layout_height="52dp"
+        android:text="Login"
+        android:textColor="#121212"
         android:textStyle="bold"
-        android:fontFamily="monospace"
-        app:backgroundTint="#03DAC5"
-        android:layout_marginBottom="16dp"/>
+        app:backgroundTint="#8AB4F8"
+        app:cornerRadius="10dp"
+        android:layout_marginBottom="12dp"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnRegister"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="REGISTER NEW ENTITY"
-        android:textColor="#FF007F"
-        android:fontFamily="monospace"
-        style="?attr/materialButtonOutlinedStyle"
-        app:strokeColor="#FF007F"
-        android:layout_marginBottom="32dp"/>
+        android:layout_height="52dp"
+        android:text="Create Account"
+        android:textColor="#8AB4F8"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="#8AB4F8"
+        app:strokeWidth="1dp"
+        app:cornerRadius="10dp"
+        android:layout_marginBottom="24dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="--- OR ---"
-        android:textColor="#555555"
-        android:fontFamily="monospace"
-        android:layout_marginBottom="16dp"/>
+        android:text="OR"
+        android:textSize="12sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="12dp"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnGoogleSignIn"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="BYPASS WITH GOOGLE"
+        android:layout_height="52dp"
+        android:text="Sign in with Google"
         android:textColor="#FFFFFF"
-        android:fontFamily="monospace"
-        app:icon="@android:drawable/ic_menu_myplaces"
-        app:iconTint="#FFFFFF"
-        app:backgroundTint="#4285F4" /> </LinearLayout>
+        android:textStyle="bold"
+        app:icon="@drawable/ic_google_logo"
+        app:iconTint="@null"
+        app:iconGravity="textStart"
+        app:backgroundTint="#242424"
+        app:cornerRadius="10dp" />
+
+</LinearLayout>
