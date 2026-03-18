@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "71827681839",
+    "project_id": "speechtosign-4e9cf",
+    "storage_bucket": "speechtosign-4e9cf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:71827681839:android:4841993ffdee7724210cda",
+        "android_client_info": {
+          "package_name": "com.example.speech_to_sign"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "71827681839-o2rd3pr7psi6h6p2conli5thtcdmp73q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.speech_to_sign",
+            "certificate_hash": "9a310aa534a8b8aee2eca4357166f2ba2e35aeda"
+          }
+        },
+        {
+          "client_id": "71827681839-ppf6u9nnn7s5q60duilfk0um9v0frnrn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbHe-6T-C0z4FBV2QAb05q0oQKHy3Bd6U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "71827681839-ppf6u9nnn7s5q60duilfk0um9v0frnrn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
