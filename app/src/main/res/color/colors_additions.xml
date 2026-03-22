@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Add these entries to your existing res/values/colors.xml -->
+<!-- (merge with whatever is already there, don't replace the whole file) -->
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="counter_text_color">#666688</color>
     <color name="tab_inactive">#777788</color>
     <color name="mic_blue">#8AB4F8</color>
     <color name="mic_teal">#34D399</color>
-    <color name="mic_active">#FF6B6B</color>
 </resources>

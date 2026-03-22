@@ -1,146 +1,236 @@
 package com.example.speech_to_sign
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.OAuthProvider
+
 class LoginActivity : AppCompatActivity() {
 
+    // ── Firebase ──────────────────────────────────────────────────────────────
+    private lateinit var auth: FirebaseAuth
+    private lateinit var googleSignInClient: GoogleSignInClient
 
-    private fun signInWithGoogle() {
-        val signInIntent = googleSignInClient.signInIntent
-        googleSignInLauncher.launch(signInIntent)
-    }
+    // ── Views ─────────────────────────────────────────────────────────────────
+    private lateinit var etEmail: TextInputEditText
+    private lateinit var etPassword: TextInputEditText
+    private lateinit var btnLogin: MaterialButton
+    private lateinit var btnRegister: MaterialButton
+    private lateinit var btnGoogle: MaterialButton
+    private lateinit var btnGitHub: MaterialButton
+    private lateinit var btnTwitter: MaterialButton
 
-
+    // ── Google Sign-In launcher ───────────────────────────────────────────────
     private val googleSignInLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
-                //get token
-                val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
+                val account = task.getResult(ApiException::class.java)
                 firebaseAuthWithGoogle(account.idToken!!)
-            } catch (e: com.google.android.gms.common.api.ApiException) {
-                android.widget.Toast.makeText(this, "Google sign in failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            } catch (e: ApiException) {
+                showToast("Google sign-in failed: ${e.message}")
             }
         }
     }
 
-
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-
-                    val intent = android.content.Intent(this, MainActivity::class.java)
-                    startActivity(intent)
-                    finish()
-                } else {
-                    android.widget.Toast.makeText(this, "Firebase Authentication Failed.", android.widget.Toast.LENGTH_SHORT).show()
-                }
-            }
-    }
-    private lateinit var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient
-    private lateinit var auth: com.google.firebase.auth.FirebaseAuth
+    // ─────────────────────────────────────────────────────────────────────────
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val container = findViewById<android.widget.LinearLayout>(R.id.loginContainer)
+        setupFirebase()
+        bindViews()
+        runEntranceAnimation()
 
-
-        for (i in 0 until container.childCount) {
-            val child = container.getChildAt(i)
-            child.alpha = 0f
-            child.translationY = 50f
-        }
-
-        //Animation Stuffs
-        for (i in 0 until container.childCount) {
-            val child = container.getChildAt(i)
-            child.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setDuration(400)
-                .setStartDelay((i * 80).toLong())
-                .setInterpolator(android.view.animation.DecelerateInterpolator())
-                .start()
-        }
-        auth = FirebaseAuth.getInstance()
-
-
+        // Skip login if already authenticated
         if (auth.currentUser != null) {
-            goToMainActivity()
+            goToMain()
+            return
         }
 
-        auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-
-
-        val gso = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(
-            com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN
-        )
-            .requestIdToken(getString(R.string.default_web_client_id)) // Firebase needs this token!
-            .requestEmail()
-            .build()
-
-        googleSignInClient = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(this, gso)
-
-
-        findViewById<View>(R.id.btnGoogleSignIn).setOnClickListener {
-            signInWithGoogle()
-        }
-
-        val emailInput = findViewById<EditText>(R.id.etEmail)
-        val passwordInput = findViewById<EditText>(R.id.etPassword)
-        val loginButton = findViewById<Button>(R.id.btnLogin)
-        val registerButton = findViewById<Button>(R.id.btnRegister)
-
-        loginButton.setOnClickListener {
-            val email = emailInput.text.toString()
-            val password = passwordInput.text.toString()
-
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                auth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this) { task ->
-                        if (task.isSuccessful) {
-                            goToMainActivity()
-                        } else {
-                            Toast.makeText(this, "Login Failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-            } else {
-                Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        registerButton.setOnClickListener {
-            val email = emailInput.text.toString()
-            val password = passwordInput.text.toString()
-
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                auth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this) { task ->
-                        if (task.isSuccessful) {
-                            goToMainActivity()
-                        } else {
-                            Toast.makeText(this, "Registration Failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-            }
-        }
+        setupClickListeners()
     }
 
-    private fun goToMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
+    // ── Setup ─────────────────────────────────────────────────────────────────
+
+    private fun setupFirebase() {
+        auth = FirebaseAuth.getInstance()
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+    }
+
+    private fun bindViews() {
+        etEmail    = findViewById(R.id.etEmail)
+        etPassword = findViewById(R.id.etPassword)
+        btnLogin    = findViewById(R.id.btnLogin)
+        btnRegister = findViewById(R.id.btnRegister)
+        btnGoogle   = findViewById(R.id.btnGoogleSignIn)
+        btnGitHub   = findViewById(R.id.btnGitHubSignIn)
+        btnTwitter  = findViewById(R.id.btnTwitterSignIn)
+    }
+
+    private fun setupClickListeners() {
+        btnLogin.setOnClickListener    { signInWithEmail() }
+        btnRegister.setOnClickListener { registerWithEmail() }
+        btnGoogle.setOnClickListener   { signInWithGoogle() }
+        btnGitHub.setOnClickListener   { signInWithGitHub() }
+        btnTwitter.setOnClickListener  { signInWithTwitter() }
+    }
+
+    // ── Animation ─────────────────────────────────────────────────────────────
+
+    private fun runEntranceAnimation() {
+        val container = findViewById<LinearLayout>(R.id.loginContainer)
+
+
+        for (i in 0 until container.childCount) {
+            container.getChildAt(i).apply {
+                alpha = 0f
+                translationY = 60f
+                scaleX = 0.95f
+                scaleY = 0.95f
+            }
+        }
+
+
+        for (i in 0 until container.childCount) {
+            container.getChildAt(i)
+                .animate()
+                .alpha(1f)
+                .translationY(0f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(450)
+                .setStartDelay((i * 70).toLong())
+                .setInterpolator(DecelerateInterpolator(1.5f))
+                .start()
+        }
+
+
+        val logo = container.getChildAt(0)
+        logo.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setInterpolator(OvershootInterpolator(2f))
+            .setDuration(600)
+            .setStartDelay(100)
+            .start()
+    }
+
+
+
+    private fun signInWithEmail() {
+        val email    = etEmail.text.toString().trim()
+        val password = etPassword.text.toString()
+
+        if (!validateFields(email, password)) return
+
+        setLoadingState(true)
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                setLoadingState(false)
+                if (task.isSuccessful) goToMain()
+                else showToast("Login failed: ${task.exception?.message}")
+            }
+    }
+
+    private fun registerWithEmail() {
+        val email    = etEmail.text.toString().trim()
+        val password = etPassword.text.toString()
+
+        if (!validateFields(email, password)) return
+
+        setLoadingState(true)
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                setLoadingState(false)
+                if (task.isSuccessful) goToMain()
+                else showToast("Registration failed: ${task.exception?.message}")
+            }
+    }
+
+    private fun validateFields(email: String, password: String): Boolean {
+        if (email.isEmpty()) { showToast("Please enter your email"); return false }
+        if (password.isEmpty()) { showToast("Please enter your password"); return false }
+        if (password.length < 6) { showToast("Password must be at least 6 characters"); return false }
+        return true
+    }
+
+
+
+    private fun signInWithGoogle() {
+        googleSignInLauncher.launch(googleSignInClient.signInIntent)
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        setLoadingState(true)
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                setLoadingState(false)
+                if (task.isSuccessful) goToMain()
+                else showToast("Google authentication failed.")
+            }
+    }
+
+    private fun signInWithGitHub() {
+        val provider = OAuthProvider.newBuilder("github.com").apply {
+            addCustomParameter("allow_signup", "true")
+            // Optional: request extra scopes
+            // scopes = listOf("user:email")
+        }.build()
+
+        auth.startActivityForSignInWithProvider(this, provider)
+            .addOnSuccessListener { goToMain() }
+            .addOnFailureListener { e ->
+                showToast("GitHub sign-in failed: ${e.message}")
+            }
+    }
+
+
+    private fun signInWithTwitter() {
+        val provider = OAuthProvider.newBuilder("twitter.com").build()
+
+        auth.startActivityForSignInWithProvider(this, provider)
+            .addOnSuccessListener { goToMain() }
+            .addOnFailureListener { e ->
+                showToast("Twitter sign-in failed: ${e.message}")
+            }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private fun goToMain() {
+        startActivity(Intent(this, MainActivity::class.java))
         finish()
+    }
+
+    private fun showToast(msg: String) =
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+
+
+    private fun setLoadingState(loading: Boolean) {
+        listOf(btnLogin, btnRegister, btnGoogle, btnGitHub, btnTwitter)
+            .forEach { it.isEnabled = !loading }
+        btnLogin.text = if (loading) "Please wait…" else "Login"
     }
 }

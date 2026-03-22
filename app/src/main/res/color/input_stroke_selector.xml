@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/color/input_stroke_selector.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#8AB4F8" android:state_focused="true" />
+    <item android:color="#2A2A3A" />
+</selector>

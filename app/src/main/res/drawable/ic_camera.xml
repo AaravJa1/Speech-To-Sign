@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/ic_camera.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Lens circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,9A4,4 0 0,0 8,13A4,4 0 0,0 12,17A4,4 0 0,0 16,13A4,4 0 0,0 12,9Z" />
+
+    <!-- Camera body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,4L17.17,4L15,2L9,2L6.83,4L4,4C2.9,4 2,4.9 2,6L2,20C2,21.1 2.9,22 4,22L20,22C21.1,22 22,21.1 22,20L22,6C22,4.9 21.1,4 20,4ZM12,19C9.24,19 7,16.76 7,14C7,11.24 9.24,9 12,9C14.76,9 17,11.24 17,14C17,16.76 14.76,19 12,19Z" />
+</vector>
