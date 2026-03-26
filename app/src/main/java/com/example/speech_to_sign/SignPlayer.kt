@@ -38,6 +38,11 @@ class SignPlayer(
     }
 
     fun playSentence(sentence: String): List<String> {
+        if (sentence.contains("Didn't catch that") || sentence.contains("Tap the mic")) {
+            stop()
+            return emptyList()
+        }
+
         videoQueue.clear()
         videoView.stopPlayback()
 
@@ -92,13 +97,24 @@ class SignPlayer(
         return missingWords
     }
 
+
+    fun stop() {
+        videoQueue.clear()
+        videoView.stopPlayback()
+        isPlaying = false
+
+
+        videoView.visibility = View.GONE
+        placeholderImage.visibility = View.VISIBLE
+        resetHighlights()
+    }
     private fun playNextVideo() {
+
         if (videoQueue.isEmpty()) {
             isPlaying = false
+            videoView.stopPlayback() // Stop any lingering frames
             videoView.visibility = View.GONE
             placeholderImage.visibility = View.VISIBLE
-
-            //Reset text
             resetHighlights()
             return
         }
@@ -106,13 +122,12 @@ class SignPlayer(
         isPlaying = true
         placeholderImage.visibility = View.GONE
         videoView.visibility = View.VISIBLE
+        videoView.requestLayout()
 
-        val nextItem = videoQueue.poll() // Get the VideoItem object
+        val nextItem = videoQueue.poll() ?: return // Extra safety null check
 
-        // HIGHLIGHT THE WORD!
         highlightWord(nextItem.wordIndex)
 
-        // Play the video
         val videoPath = "android.resource://${context.packageName}/${nextItem.resId}"
         videoView.setVideoURI(Uri.parse(videoPath))
         videoView.start()

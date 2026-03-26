@@ -143,6 +143,7 @@ class MainActivity : AppCompatActivity() {
         isListening = true
         setMicActive(true)
         // Short rising beep = "I'm listening"
+        signPlayer.stop()
         toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
         speechRecognizer.startListening(speechIntent)
     }
@@ -213,14 +214,17 @@ class MainActivity : AppCompatActivity() {
                     ?.firstOrNull()
 
                 if (!text.isNullOrBlank()) {
-                    // Only pass real recognised speech to signPlayer
                     tvResult.text = text
                     setStatus("Playing")
                     tvNowPlaying.visibility = View.VISIBLE
+                    // ONLY play if we have text
                     signPlayer.playSentence(text)
                 } else {
+
                     setStatus("Idle")
                     tvResult.text = "Tap the mic and speak…"
+                    tvNowPlaying.visibility = View.GONE
+
                 }
             }
             override fun onPartialResults(p: Bundle?) {}
