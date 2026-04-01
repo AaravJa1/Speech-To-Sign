@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="#111222">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Terms &amp; Conditions"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="12dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#AAAACC"
+            android:textSize="13sp"
+            android:lineSpacingMultiplier="1.5"
+            android:text="Welcome to HandSpeak.\n\nBy creating an account, you agree to the following:\n\n1. Camera Usage\nHandSpeak uses your device camera solely to detect hand gestures for sign language recognition. Camera data is processed on-device and is never uploaded or stored.\n\n2. Microphone Usage\nThe microphone is used for speech-to-sign conversion. Audio is processed locally and not retained.\n\n3. Data Collection\nWe collect only your email address for authentication purposes via Firebase. We do not sell or share your personal data with third parties.\n\n4. User Responsibility\nYou are responsible for ensuring HandSpeak is used in appropriate contexts. The app is provided as-is and accuracy of sign recognition may vary.\n\n5. Changes\nWe may update these terms. Continued use of the app implies acceptance of any updates." />
+
+    </ScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAcceptTerms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="I Accept"
+        android:textColor="#000000"
+        app:backgroundTint="#8AB4F8"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDeclineTerms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Decline"
+        android:textColor="#AAAACC"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="#444466" />
+
+</LinearLayout>

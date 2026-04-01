@@ -68,6 +68,34 @@ class LoginActivity : AppCompatActivity() {
 
     // ── Setup ─────────────────────────────────────────────────────────────────
 
+    private fun showTermsDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_terms, null)
+
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        dialogView.findViewById<com.google.android.material.button.MaterialButton>(
+            R.id.btnAcceptTerms
+        ).setOnClickListener {
+            dialog.dismiss()
+            goToMain()
+        }
+
+        dialogView.findViewById<com.google.android.material.button.MaterialButton>(
+            R.id.btnDeclineTerms
+        ).setOnClickListener {
+            dialog.dismiss()
+            // Delete the just-created account since they declined
+            auth.currentUser?.delete()
+            showToast("You must accept the terms to use HandSpeak.")
+        }
+
+        dialog.show()
+    }
+
+
     private fun setupFirebase() {
         auth = FirebaseAuth.getInstance()
 
@@ -163,7 +191,7 @@ class LoginActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 setLoadingState(false)
-                if (task.isSuccessful) goToMain()
+                if (task.isSuccessful) showTermsDialog()
                 else showToast("Registration failed: ${task.exception?.message}")
             }
     }
@@ -187,20 +215,23 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 setLoadingState(false)
-                if (task.isSuccessful) goToMain()
-                else showToast("Google authentication failed.")
+                if (task.isSuccessful) {
+                    val isNew = task.result?.additionalUserInfo?.isNewUser ?: false
+                    if (isNew) showTermsDialog() else goToMain()
+                } else showToast("Google authentication failed.")
             }
     }
 
     private fun signInWithGitHub() {
         val provider = OAuthProvider.newBuilder("github.com").apply {
             addCustomParameter("allow_signup", "true")
-            // Optional: request extra scopes
-            // scopes = listOf("user:email")
         }.build()
 
         auth.startActivityForSignInWithProvider(this, provider)
-            .addOnSuccessListener { goToMain() }
+            .addOnSuccessListener { result ->
+                val isNew = result.additionalUserInfo?.isNewUser ?: false
+                if (isNew) showTermsDialog() else goToMain()
+            }
             .addOnFailureListener { e ->
                 showToast("GitHub sign-in failed: ${e.message}")
             }
@@ -211,7 +242,10 @@ class LoginActivity : AppCompatActivity() {
         val provider = OAuthProvider.newBuilder("twitter.com").build()
 
         auth.startActivityForSignInWithProvider(this, provider)
-            .addOnSuccessListener { goToMain() }
+            .addOnSuccessListener { result ->
+                val isNew = result.additionalUserInfo?.isNewUser ?: false
+                if (isNew) showTermsDialog() else goToMain()
+            }
             .addOnFailureListener { e ->
                 showToast("Twitter sign-in failed: ${e.message}")
             }

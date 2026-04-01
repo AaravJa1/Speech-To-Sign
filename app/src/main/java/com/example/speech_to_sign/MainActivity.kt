@@ -20,6 +20,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import android.widget.ImageButton
 
 class MainActivity : AppCompatActivity() {
 
@@ -84,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     override fun onDestroy() {
         super.onDestroy()
         toneGen.release()
@@ -105,6 +107,9 @@ class MainActivity : AppCompatActivity() {
         resultCard       = findViewById(R.id.resultCard)
         micRow           = findViewById(R.id.micRow)
         btnMic           = findViewById(R.id.btnMic)
+        findViewById<ImageButton>(R.id.btnProfile).setOnClickListener {
+            startActivity(Intent(this, ProfileActivity::class.java))
+        }
     }
 
     // ── Sign Player ───────────────────────────────────────────────────────────

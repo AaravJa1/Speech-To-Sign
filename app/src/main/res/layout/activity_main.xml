@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
+    android:fitsSystemWindows="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -16,8 +17,25 @@
         android:orientation="horizontal"
         android:paddingStart="20dp"
         android:paddingTop="18dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="10dp" />
+        android:paddingEnd="12dp"
+        android:paddingBottom="10dp">
+
+        <!-- Spacer pushes profile button to the right -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btnProfile"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_person"
+            android:contentDescription="Profile"
+            app:tint="#8AB4F8" />
+
+    </LinearLayout>
 
     <!-- ── Pill switcher ─────────────────────────────────────────────────── -->
     <LinearLayout
