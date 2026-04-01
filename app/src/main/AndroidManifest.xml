@@ -28,6 +28,21 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity android:name=".ProfileActivity" />
+
+        <activity
+            android:name=".EmailLinkActivity"
+            android:exported="true">
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="speechtosign-4e9cf.firebaseapp.com"/>
+            </intent-filter>
+        </activity>
+
+
     </application>
 
 </manifest>

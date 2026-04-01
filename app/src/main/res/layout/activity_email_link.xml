@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0F"
+    android:fitsSystemWindows="true">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_back"
+                android:contentDescription="Back"
+                app:tint="#8AB4F8" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingHorizontal="28dp"
+                android:paddingBottom="48dp"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:id="@+id/stateSend"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:src="@drawable/ic_email"
+                        app:tint="#8AB4F8"
+                        android:layout_marginBottom="24dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Passwordless Sign In"
+                        android:textColor="#FFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enter your email and we'll send you a magic link. No password needed."
+                        android:textColor="#667799"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:layout_marginBottom="36dp"
+                        android:paddingHorizontal="8dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Email address"
+                        app:startIconDrawable="@drawable/ic_email"
+                        app:startIconTint="#8AB4F8"
+                        app:boxStrokeColor="@color/input_stroke_selector"
+                        app:boxStrokeWidthFocused="1.5dp"
+                        app:boxBackgroundColor="#111122"
+                        app:hintTextColor="#8AB4F8"
+                        android:layout_marginBottom="24dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etEmailLink"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textEmailAddress"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#555566"
+                            android:paddingTop="16dp"
+                            android:paddingBottom="16dp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSendLink"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:text="Send Magic Link"
+                        android:textColor="#0A0A0F"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.06"
+                        app:backgroundTint="#8AB4F8"
+                        app:cornerRadius="14dp"
+                        app:rippleColor="#33FFFFFF"
+                        android:stateListAnimator="@null"
+                        android:elevation="6dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/stateCheckEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="✉️"
+                        android:textSize="56sp"
+                        android:layout_marginBottom="24dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Check your inbox"
+                        android:textColor="#FFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:id="@+id/tvSentTo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="We sent a sign-in link to"
+                        android:textColor="#667799"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/tvSentEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textColor="#8AB4F8"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="36dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnResend"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:text="Resend Link"
+                        android:textColor="#8AB4F8"
+                        app:strokeColor="#8AB4F8"
+                        app:strokeWidth="1.5dp"
+                        app:cornerRadius="14dp"
+                        app:rippleColor="#1A8AB4F8" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

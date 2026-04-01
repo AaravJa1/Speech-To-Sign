@@ -257,6 +257,18 @@
 
             </LinearLayout>
 
+            <!-- ─── Email link signin ─── -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEmailLink"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Sign in with Email Link (Passwordless)"
+                android:textColor="#667799"
+                android:textSize="13sp"
+                app:rippleColor="#1A8AB4F8" />
+
         </LinearLayout>
     </ScrollView>
 </FrameLayout>

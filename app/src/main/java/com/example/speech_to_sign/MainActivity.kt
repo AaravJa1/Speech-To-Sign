@@ -21,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import android.widget.ImageButton
+import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var speechIntent: Intent
 
     private lateinit var handTracker: HandTracker
+
 
     private lateinit var tabSpeechToSign: TextView
     private lateinit var tabSignToSpeech: TextView
@@ -110,6 +112,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnProfile).setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
+
+
+
     }
 
     // ── Sign Player ───────────────────────────────────────────────────────────

@@ -33,6 +33,8 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var btnGitHub: MaterialButton
     private lateinit var btnTwitter: MaterialButton
 
+    private lateinit var btnEmailLink: MaterialButton
+
     // ── Google Sign-In launcher ───────────────────────────────────────────────
     private val googleSignInLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
@@ -114,6 +116,7 @@ class LoginActivity : AppCompatActivity() {
         btnGoogle   = findViewById(R.id.btnGoogleSignIn)
         btnGitHub   = findViewById(R.id.btnGitHubSignIn)
         btnTwitter  = findViewById(R.id.btnTwitterSignIn)
+        btnEmailLink = findViewById(R.id.btnEmailLink)
     }
 
     private fun setupClickListeners() {
@@ -122,6 +125,10 @@ class LoginActivity : AppCompatActivity() {
         btnGoogle.setOnClickListener   { signInWithGoogle() }
         btnGitHub.setOnClickListener   { signInWithGitHub() }
         btnTwitter.setOnClickListener  { signInWithTwitter() }
+        btnEmailLink.setOnClickListener {
+            startActivity(Intent(this, EmailLinkActivity::class.java))
+        }
+
     }
 
     // ── Animation ─────────────────────────────────────────────────────────────
