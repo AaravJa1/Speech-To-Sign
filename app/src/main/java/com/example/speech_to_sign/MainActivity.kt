@@ -11,9 +11,11 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.view.PreviewView
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -28,6 +30,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvNowPlaying: TextView
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var speechIntent: Intent
+
+    private lateinit var handTracker: HandTracker
 
     private lateinit var tabSpeechToSign: TextView
     private lateinit var tabSignToSpeech: TextView
@@ -48,10 +52,20 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val permissionsNeeded = mutableListOf<String>()
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.RECORD_AUDIO), 1)
+            permissionsNeeded.add(Manifest.permission.RECORD_AUDIO)
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.CAMERA)
+        }
+
+        if (permissionsNeeded.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, permissionsNeeded.toTypedArray(), 1)
         }
 
         bindViews()
@@ -114,6 +128,28 @@ class MainActivity : AppCompatActivity() {
     private fun switchToTab(index: Int) {
         if (index == currentTab) return
         currentTab = index
+
+        if (index == 1) {
+            findViewById<LinearLayout>(R.id.cameraPlaceholder).visibility = View.GONE
+            findViewById<PreviewView>(R.id.cameraPreview).visibility = View.VISIBLE
+            handTracker = HandTracker(this, this, findViewById(R.id.cameraPreview)) { result ->
+                if (result.landmarks().isNotEmpty()) {
+                    val landmarks = result.landmarks()[0]
+                    runOnUiThread {
+                        findViewById<TextView>(R.id.tvDetectedSpeech).text =
+                            "Hand detected — ${landmarks.size} landmarks"
+                    }
+                }
+            }
+            handTracker.start()
+        } else {
+            if (::handTracker.isInitialized) handTracker.stop()
+            findViewById<LinearLayout>(R.id.cameraPlaceholder).visibility = View.VISIBLE
+            findViewById<PreviewView>(R.id.cameraPreview).visibility = View.GONE
+        }
+
+
+
         val toSpeechSign = index == 0
 
         fun styleTab(tab: TextView, active: Boolean) {

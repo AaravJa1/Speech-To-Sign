@@ -16,43 +16,59 @@
         app:cardCornerRadius="24dp"
         app:cardElevation="0dp">
 
-        <LinearLayout
-            android:id="@+id/cameraPlaceholder"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:layout_height="match_parent">
 
-            <ImageView
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:layout_marginBottom="16dp"
-                android:src="@drawable/ic_camera"
-                app:tint="#8AB4F8" />
+            <!-- Live camera feed — hidden until camera starts -->
+            <androidx.camera.view.PreviewView
+                android:id="@+id/cameraPreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Camera Preview"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Point your camera at a hand to detect sign language"
-                android:textColor="#555566"
-                android:textSize="13sp"
+            <!-- Placeholder shown before camera starts -->
+            <LinearLayout
+                android:id="@+id/cameraPlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
                 android:gravity="center"
-                android:paddingLeft="32dp"
-                android:paddingRight="32dp" />
+                android:visibility="visible">
 
-        </LinearLayout>
+                <ImageView
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_marginBottom="16dp"
+                    android:src="@drawable/ic_camera"
+                    app:tint="#8AB4F8" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Camera Preview"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Point your camera at a hand to detect sign language"
+                    android:textColor="#555566"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:paddingLeft="32dp"
+                    android:paddingRight="32dp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
 
     </androidx.cardview.widget.CardView>
 
+    <!-- Detection result panel -->
     <androidx.cardview.widget.CardView
         android:id="@+id/detectionPanel"
         android:layout_width="match_parent"

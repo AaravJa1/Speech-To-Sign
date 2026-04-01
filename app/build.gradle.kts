@@ -9,15 +9,30 @@ plugins {
 android {
     namespace = "com.example.speech_to_sign"
     compileSdk = 36
+    androidResources {
+        noCompress += "task"
+    }
 
+    packaging {
+        resources {
+            pickFirsts += "lib/arm64-v8a/libc++_shared.so"
+            pickFirsts += "lib/arm64-v8a/libOpenCL-pixel.so"
+        }
+    }
     defaultConfig {
+
         applicationId = "com.example.speech_to_sign"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
     }
 
     buildTypes {
@@ -59,4 +74,14 @@ dependencies {
 
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+
+    // CameraX
+    implementation("androidx.camera:camera-core:1.6.0")
+    implementation("androidx.camera:camera-camera2:1.6.0")
+    implementation("androidx.camera:camera-lifecycle:1.6.0")
+    implementation("androidx.camera:camera-view:1.6.0")
+
+    // MediaPipe Hands
+    implementation("com.google.mediapipe:tasks-vision:0.10.9")
+
 }
