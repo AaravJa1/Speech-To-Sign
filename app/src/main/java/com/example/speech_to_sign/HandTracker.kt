@@ -1,6 +1,8 @@
 package com.example.speech_to_sign
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -77,8 +79,20 @@ class HandTracker(
     }
 
     private fun processFrame(imageProxy: ImageProxy) {
-        val bitmap = imageProxy.toBitmap()
-        val mpImage = BitmapImageBuilder(bitmap).build()
+        val rawBitmap = imageProxy.toBitmap()
+        val rotationDegrees = imageProxy.imageInfo.rotationDegrees.toFloat()
+
+        // Rotate the camera frame so it is upright!
+        val matrix = Matrix()
+        matrix.postRotate(rotationDegrees)
+
+        // If you are using the FRONT camera, we also need to flip it horizontally here
+        // so we don't have to do that confusing math in the Interpreter later.
+        matrix.postScale(-1f, 1f, rawBitmap.width / 2f, rawBitmap.height / 2f)
+
+        val uprightBitmap = Bitmap.createBitmap(rawBitmap, 0, 0, rawBitmap.width, rawBitmap.height, matrix, true)
+
+        val mpImage = BitmapImageBuilder(uprightBitmap).build()
         handLandmarker.detectAsync(mpImage, imageProxy.imageInfo.timestamp)
         imageProxy.close()
     }

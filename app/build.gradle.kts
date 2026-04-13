@@ -64,7 +64,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
     //firebase version
     implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
 

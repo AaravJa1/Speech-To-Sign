@@ -26,6 +26,8 @@ import com.google.android.material.button.MaterialButton
 class MainActivity : AppCompatActivity() {
 
     private lateinit var signPlayer: SignPlayer
+
+    private lateinit var signInterpreter: SignInterpreter
     private lateinit var tvResult: TextView
     private lateinit var tvMissing: TextView
     private lateinit var tvStatusChip: TextView
@@ -85,6 +87,43 @@ class MainActivity : AppCompatActivity() {
                 startListening()
             }
         }
+
+        signInterpreter = SignInterpreter(
+            context = this,
+            onCharacterLocked = { newChar, builtWord ->
+                // This triggers every time a new letter is locked in!
+                runOnUiThread {
+                    // Update your UI (using the ID from layout_sign_to_speech.xml)
+                    findViewById<TextView>(R.id.tvDetectedSpeech).text = builtWord
+
+                    // Optional: beep so the user knows the letter registered
+                    toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 50)
+                }
+            },
+            onWordComplete = { finalWord ->
+                // This triggers when they drop their hands!
+                runOnUiThread {
+                    // Here is where you would pass `finalWord` to a SpellChecker
+                    // e.g., val corrected = checkSpelling(finalWord)
+
+                    // And then pass it to Text-To-Speech!
+                    // tts.speak(finalWord, TextToSpeech.QUEUE_FLUSH, null, null)
+
+                    findViewById<TextView>(R.id.tvDetectedSpeech).text = "$finalWord (Done)"
+                }
+            }
+        )
+
+// Pass the MediaPipe results directly into the interpreter
+        handTracker = HandTracker(
+            context = this,
+            lifecycleOwner = this,
+            previewView = findViewById(R.id.cameraPreview),
+            onLandmarks = { result ->
+                signInterpreter.processLandmarks(result)
+            }
+        )
+
     }
 
 
@@ -130,6 +169,8 @@ class MainActivity : AppCompatActivity() {
 
     // ── Pill switcher ─────────────────────────────────────────────────────────
 
+    // ── Pill switcher ─────────────────────────────────────────────────────────
+
     private fun setupPillSwitcher() {
         tabSpeechToSign.setOnClickListener { switchToTab(0) }
         tabSignToSpeech.setOnClickListener { switchToTab(1) }
@@ -140,25 +181,23 @@ class MainActivity : AppCompatActivity() {
         currentTab = index
 
         if (index == 1) {
+            // Switched to Sign-to-Speech: Show camera, hide placeholder, START tracking
             findViewById<LinearLayout>(R.id.cameraPlaceholder).visibility = View.GONE
             findViewById<PreviewView>(R.id.cameraPreview).visibility = View.VISIBLE
-            handTracker = HandTracker(this, this, findViewById(R.id.cameraPreview)) { result ->
-                if (result.landmarks().isNotEmpty()) {
-                    val landmarks = result.landmarks()[0]
-                    runOnUiThread {
-                        findViewById<TextView>(R.id.tvDetectedSpeech).text =
-                            "Hand detected — ${landmarks.size} landmarks"
-                    }
-                }
+
+            // We already wired handTracker to signInterpreter in onCreate.
+            // We just need to turn the camera on.
+            if (::handTracker.isInitialized) {
+                handTracker.start()
             }
-            handTracker.start()
         } else {
-            if (::handTracker.isInitialized) handTracker.stop()
+            // Switched to Speech-to-Sign: STOP tracking, hide camera, show placeholder
+            if (::handTracker.isInitialized) {
+                handTracker.stop()
+            }
             findViewById<LinearLayout>(R.id.cameraPlaceholder).visibility = View.VISIBLE
             findViewById<PreviewView>(R.id.cameraPreview).visibility = View.GONE
         }
-
-
 
         val toSpeechSign = index == 0
 
