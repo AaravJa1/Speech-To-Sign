@@ -25,7 +25,7 @@
                 android:id="@+id/cameraPreview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="gone" />
+                android:keepScreenOn="true"     android:visibility="gone" />
 
             <!-- Placeholder shown before camera starts -->
             <LinearLayout

@@ -2,147 +2,144 @@ package com.example.speech_to_sign
 
 import android.content.Context
 import android.util.Log
-import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
-import java.nio.MappedByteBuffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
 class SignInterpreter(
     context: Context,
-    private val onCharacterLocked: (String, String) -> Unit, // Returns (currentChar, currentWord)
+    private val onCharacterLocked: (String, String) -> Unit,
     private val onWordComplete: (String) -> Unit
 ) {
-    private var tflite: Interpreter? = null
+    private var interpreter: Interpreter? = null
+    private var labels: List<String> = emptyList()
 
-    // --- STATE MACHINE VARIABLES ---
-    private var currentWord = ""
-    private var lockedChar = ""
-    private var frameCount = 0
-    private var noHandCount = 0
+    private var currentWord        = ""
+    private var lockedChar         = ""
+    private var currentPendingChar = ""
+    private var frameCount         = 0
+    private var noHandCount        = 0
 
-    private val DEBOUNCE_THRESHOLD = 10 // Frames needed to confirm a letter
-    private val SPACE_THRESHOLD = 30    // Frames of no hands to trigger a space/word end
-
-    // Make sure this matches the exact sorted order from your Python script!
-    // Example assumes 1-9, then A-Z (Total 35 classes)
-    private val labels = arrayOf(
-        "1", "2", "3", "4", "5", "6", "7", "8", "9",
-        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-        "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
-    )
+    // Tune these if letters lock too fast/slow
+    private val CONFIDENCE_THRESHOLD = 0.01f
+    private val DEBOUNCE_FRAMES      = 10       // frames before a letter locks
+    private val SPACE_THRESHOLD      = 25       // no-hand frames before word completes
 
     init {
-        // Load the TFLite model from assets
-        try {
-            val assetFileDescriptor = context.assets.openFd("isl_model.tflite")
-            val fileInputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
-            val fileChannel = fileInputStream.channel
-            val startOffset = assetFileDescriptor.startOffset
-            val declaredLength = assetFileDescriptor.declaredLength
-            val buffer: MappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
-            tflite = Interpreter(buffer)
+        labels = loadLabels(context)
+        loadModel(context)
+        Log.d("SignInterpreter", "Loaded ${labels.size} classes: $labels")
+    }
+
+    // ── Load labels from class_names.txt in assets ────────────────────────────
+
+    private fun loadLabels(context: Context): List<String> {
+        return try {
+            context.assets.open("class_names.txt")
+                .bufferedReader()
+                .readLines()
+                .filter { it.isNotBlank() }
         } catch (e: Exception) {
-            Log.e("SignInterpreter", "Error loading model", e)
+            Log.e("SignInterpreter", "label load failed: ${e.message}")
+            ('A'..'Z').map { it.toString() }
         }
     }
 
-    fun processLandmarks(result: HandLandmarkerResult) {
-        // 1. Check for "Space" (No hands detected)
-        if (result.landmarks().isEmpty()) {
+    // ── Load TFLite MLP from assets ───────────────────────────────────────────
+
+    private fun loadModel(context: Context) {
+        try {
+            val afd = context.assets.openFd("isl_gesture.tflite")
+            val buffer = FileInputStream(afd.fileDescriptor).channel.map(
+                FileChannel.MapMode.READ_ONLY,
+                afd.startOffset,
+                afd.declaredLength
+            )
+            interpreter = Interpreter(buffer)
+            Log.d("SignInterpreter", "Model loaded OK")
+        } catch (e: Exception) {
+            Log.e("SignInterpreter", "Model load failed: ${e.message}")
+        }
+    }
+
+    // ── Main entry: called every frame by HandTracker ─────────────────────────
+    // landmarks = FloatArray(126) or null if no hands visible
+
+    fun processLandmarks(landmarks: FloatArray?) {
+        if (landmarks == null) {
             noHandCount++
-            if (noHandCount == SPACE_THRESHOLD && currentWord.isNotEmpty()) {
-                // The user put their hands down! Word is complete.
+            if (noHandCount > SPACE_THRESHOLD && currentWord.isNotEmpty()) {
                 onWordComplete(currentWord)
-                currentWord = ""
-                lockedChar = ""
+                currentWord        = ""
+                lockedChar         = ""
+                currentPendingChar = ""
+                frameCount         = 0
             }
             return
         }
 
-        // We see hands! Reset the space counter.
         noHandCount = 0
 
-        // 2. Extract and Normalize Data (The Python Logic in Kotlin)
-        val inputData = FloatArray(126) { 0f } // 126 zeros default
+        val (label, conf) = runInference(landmarks)
 
-        result.landmarks().forEachIndexed { index, handLandmark ->
-            // Get handedness ('Left' or 'Right')
-            val handedness = result.handednesses()[index].first().categoryName()
-
-            // Wrist is landmark 0
-            val wristX = handLandmark[0].x()
-            val wristY = handLandmark[0].y()
-            val wristZ = handLandmark[0].z()
-
-            val handData = FloatArray(63)
-            var dataIndex = 0
-            for (lm in handLandmark) {
-                handData[dataIndex++] = lm.x() - wristX
-                handData[dataIndex++] = lm.y() - wristY
-                handData[dataIndex++] = lm.z() - wristZ
-            }
-
-            // Put into the correct slot (Left=0..62, Right=63..125)
-            if (handedness == "Left") {
-                System.arraycopy(handData, 0, inputData, 0, 63)
-            } else {
-                System.arraycopy(handData, 0, inputData, 63, 63)
-            }
-        }
-
-        // 3. Run Inference
-        val inputBuffer = Array(1) { inputData }
-        val outputBuffer = Array(1) { FloatArray(labels.size) }
-
-        tflite?.run(inputBuffer, outputBuffer)
-
-        // 4. Find the highest probability
-        val probabilities = outputBuffer[0]
-        var maxIndex = 0
-        for (i in probabilities.indices) {
-            if (probabilities[i] > probabilities[maxIndex]) {
-                maxIndex = i
-            }
-        }
-
-        val maxProbability = probabilities[maxIndex]
-
-        // --- THE CONFIDENCE FILTER ---
-        // If the model is less than 60% sure, ignore this frame entirely!
-        if (maxProbability < 0.60f) {
-            frameCount = 0 // Reset debouncer
-            return
-        }
-        
-        val predictedChar = labels[maxIndex]
-
-        // 5. The Debouncer Logic
-        if (predictedChar == lockedChar) {
-            // Already locked this letter, ignore duplicates (solves "HHHH" -> "H")
+        if (conf < CONFIDENCE_THRESHOLD) {
+            frameCount = 0
             return
         }
 
-        // We are seeing a new character! Wait for it to stabilize.
-        if (predictedChar == currentPendingChar) {
+        // Already locked this char — wait for hand to move
+        if (label == lockedChar) return
+
+        if (label == currentPendingChar) {
             frameCount++
-            if (frameCount >= DEBOUNCE_THRESHOLD) {
-                // Locked in!
-                lockedChar = predictedChar
-                currentWord += lockedChar
-                frameCount = 0
-                onCharacterLocked(lockedChar, currentWord)
+            if (frameCount >= DEBOUNCE_FRAMES) {
+                lockCharacter(label)
             }
         } else {
-            // Glitch or transition frame, reset counter
-            currentPendingChar = predictedChar
-            frameCount = 0
+            currentPendingChar = label
+            frameCount         = 0
         }
     }
 
-    private var currentPendingChar = "" // Temporary var for the debouncer
+    private fun lockCharacter(label: String) {
+        lockedChar   = label
+        currentWord += label
+        frameCount   = 0
+        onCharacterLocked(label, currentWord)
+    }
+
+    // ── MLP inference on float[126] ───────────────────────────────────────────
+
+    private fun softmax(logits: FloatArray): FloatArray {
+        val maxVal = logits.max()!!
+        val exps = logits.map { Math.exp((it - maxVal).toDouble()).toFloat() }
+        val sum = exps.sum()
+        return exps.map { it / sum }.toFloatArray()
+    }
+
+    private fun runInference(landmarks: FloatArray): Pair<String, Float> {
+        val interp = interpreter ?: return Pair("None", 0f)
+
+        val input = ByteBuffer.allocateDirect(126 * 4).apply {
+            order(ByteOrder.nativeOrder())
+            landmarks.forEach { putFloat(it) }
+            rewind()
+        }
+
+        val output = Array(1) { FloatArray(labels.size) }
+        interp.run(input, output)
+
+        val probs  = softmax(output[0])   // <-- add this
+        val maxIdx = probs.indices.maxByOrNull { probs[it] }
+            ?: return Pair("None", 0f)
+
+        Log.d("SignInterpreter", "${labels[maxIdx]} : ${"%.2f".format(probs[maxIdx])}")
+        return Pair(labels[maxIdx], probs[maxIdx])
+    }
 
     fun close() {
-        tflite?.close()
+        interpreter?.close()
     }
 }

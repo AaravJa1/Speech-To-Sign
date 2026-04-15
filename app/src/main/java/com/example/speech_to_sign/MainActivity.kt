@@ -21,22 +21,19 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import android.widget.ImageButton
-import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var signPlayer: SignPlayer
-
     private lateinit var signInterpreter: SignInterpreter
+    private lateinit var handTracker: HandTracker
+
     private lateinit var tvResult: TextView
     private lateinit var tvMissing: TextView
     private lateinit var tvStatusChip: TextView
     private lateinit var tvNowPlaying: TextView
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var speechIntent: Intent
-
-    private lateinit var handTracker: HandTracker
-
 
     private lateinit var tabSpeechToSign: TextView
     private lateinit var tabSignToSpeech: TextView
@@ -48,31 +45,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnMic: FloatingActionButton
 
     private var currentTab  = 0
-    private var isListening = false   // tracks mic state
+    private var isListening = false
 
-    // Beep tones — created once, released in onDestroy
     private val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val permissionsNeeded = mutableListOf<String>()
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.RECORD_AUDIO)
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.CAMERA)
-        }
-
-        if (permissionsNeeded.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, permissionsNeeded.toTypedArray(), 1)
-        }
-
+        requestPermissionsIfNeeded()
         bindViews()
         setupSignPlayer()
         setupSpeechRecognizer()
@@ -80,57 +61,55 @@ class MainActivity : AppCompatActivity() {
 
         btnMic.setOnClickListener {
             pressBounce()
-            if (isListening) {
-                // Tap again to stop
-                stopListening()
-            } else {
-                startListening()
-            }
+            if (isListening) stopListening() else startListening()
         }
 
+        // ── SignInterpreter: receives landmark vectors, emits letters/words ──
         signInterpreter = SignInterpreter(
             context = this,
             onCharacterLocked = { newChar, builtWord ->
-                // This triggers every time a new letter is locked in!
                 runOnUiThread {
-                    // Update your UI (using the ID from layout_sign_to_speech.xml)
                     findViewById<TextView>(R.id.tvDetectedSpeech).text = builtWord
-
-                    // Optional: beep so the user knows the letter registered
                     toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 50)
                 }
             },
             onWordComplete = { finalWord ->
-                // This triggers when they drop their hands!
                 runOnUiThread {
-                    // Here is where you would pass `finalWord` to a SpellChecker
-                    // e.g., val corrected = checkSpelling(finalWord)
-
-                    // And then pass it to Text-To-Speech!
-                    // tts.speak(finalWord, TextToSpeech.QUEUE_FLUSH, null, null)
-
-                    findViewById<TextView>(R.id.tvDetectedSpeech).text = "$finalWord (Done)"
+                    findViewById<TextView>(R.id.tvDetectedSpeech).text = "$finalWord ✓"
+                    // Hook TTS here: tts.speak(finalWord, ...)
                 }
             }
         )
 
-// Pass the MediaPipe results directly into the interpreter
+        // ── HandTracker: emits FloatArray(126) landmarks each frame ──────────
         handTracker = HandTracker(
-            context = this,
+            context       = this,
             lifecycleOwner = this,
-            previewView = findViewById(R.id.cameraPreview),
-            onLandmarks = { result ->
-                signInterpreter.processLandmarks(result)
+            previewView   = findViewById(R.id.cameraPreview),
+            onLandmarks   = { landmarks ->
+                // landmarks is FloatArray(126) or null — pass straight to interpreter
+                signInterpreter.processLandmarks(landmarks)
             }
         )
-
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
         toneGen.release()
         speechRecognizer.destroy()
+        signInterpreter.close()
+    }
+
+    // ── Permissions ───────────────────────────────────────────────────────────
+
+    private fun requestPermissionsIfNeeded() {
+        val needed = mutableListOf<String>()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) needed.add(Manifest.permission.RECORD_AUDIO)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED) needed.add(Manifest.permission.CAMERA)
+        if (needed.isNotEmpty())
+            ActivityCompat.requestPermissions(this, needed.toTypedArray(), 1)
     }
 
     // ── Bind ──────────────────────────────────────────────────────────────────
@@ -151,9 +130,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnProfile).setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
-
-
-
     }
 
     // ── Sign Player ───────────────────────────────────────────────────────────
@@ -169,8 +145,6 @@ class MainActivity : AppCompatActivity() {
 
     // ── Pill switcher ─────────────────────────────────────────────────────────
 
-    // ── Pill switcher ─────────────────────────────────────────────────────────
-
     private fun setupPillSwitcher() {
         tabSpeechToSign.setOnClickListener { switchToTab(0) }
         tabSignToSpeech.setOnClickListener { switchToTab(1) }
@@ -181,20 +155,11 @@ class MainActivity : AppCompatActivity() {
         currentTab = index
 
         if (index == 1) {
-            // Switched to Sign-to-Speech: Show camera, hide placeholder, START tracking
             findViewById<LinearLayout>(R.id.cameraPlaceholder).visibility = View.GONE
             findViewById<PreviewView>(R.id.cameraPreview).visibility = View.VISIBLE
-
-            // We already wired handTracker to signInterpreter in onCreate.
-            // We just need to turn the camera on.
-            if (::handTracker.isInitialized) {
-                handTracker.start()
-            }
+            if (::handTracker.isInitialized) handTracker.start()
         } else {
-            // Switched to Speech-to-Sign: STOP tracking, hide camera, show placeholder
-            if (::handTracker.isInitialized) {
-                handTracker.stop()
-            }
+            if (::handTracker.isInitialized) handTracker.stop()
             findViewById<LinearLayout>(R.id.cameraPlaceholder).visibility = View.VISIBLE
             findViewById<PreviewView>(R.id.cameraPreview).visibility = View.GONE
         }
@@ -227,7 +192,6 @@ class MainActivity : AppCompatActivity() {
     private fun startListening() {
         isListening = true
         setMicActive(true)
-        // Short rising beep = "I'm listening"
         signPlayer.stop()
         toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
         speechRecognizer.startListening(speechIntent)
@@ -236,17 +200,14 @@ class MainActivity : AppCompatActivity() {
     private fun stopListening() {
         isListening = false
         setMicActive(false)
-        // Short falling beep = "stopped"
         toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 120)
         speechRecognizer.stopListening()
         setStatus("Idle")
     }
 
-    // Change mic button colour to signal active/idle state
     private fun setMicActive(active: Boolean) {
         btnMic.backgroundTintList = getColorStateList(
-            if (active) R.color.mic_active else R.color.mic_blue
-        )
+            if (active) R.color.mic_active else R.color.mic_blue)
     }
 
     // ── Speech recognizer ─────────────────────────────────────────────────────
@@ -261,55 +222,40 @@ class MainActivity : AppCompatActivity() {
         }
 
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(p: Bundle?) {
-                setStatus("Listening…")
-            }
+            override fun onReadyForSpeech(p: Bundle?) { setStatus("Listening…") }
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(v: Float) {}
             override fun onBufferReceived(b: ByteArray?) {}
-            override fun onEndOfSpeech() {
-                setStatus("Processing…")
-            }
+            override fun onEndOfSpeech() { setStatus("Processing…") }
             override fun onError(error: Int) {
                 isListening = false
                 setMicActive(false)
                 setStatus("Idle")
-                // Play a low error beep
                 toneGen.startTone(ToneGenerator.TONE_SUP_ERROR, 200)
-
-                // Set a status message but DO NOT pass it to signPlayer
-                val msg = when (error) {
+                tvResult.text = when (error) {
                     SpeechRecognizer.ERROR_NO_MATCH,
                     SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Didn't catch that — try again."
                     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Microphone permission needed."
                     else -> "Tap the mic and speak…"
                 }
-                // Write directly to tvResult, bypassing signPlayer entirely
-                tvResult.text = msg
                 tvNowPlaying.visibility = View.GONE
             }
             override fun onResults(results: Bundle?) {
                 isListening = false
                 setMicActive(false)
-                // Success beep — two short tones
                 toneGen.startTone(ToneGenerator.TONE_PROP_ACK, 100)
-
                 val text = results
                     ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     ?.firstOrNull()
-
                 if (!text.isNullOrBlank()) {
                     tvResult.text = text
                     setStatus("Playing")
                     tvNowPlaying.visibility = View.VISIBLE
-                    // ONLY play if we have text
                     signPlayer.playSentence(text)
                 } else {
-
                     setStatus("Idle")
                     tvResult.text = "Tap the mic and speak…"
                     tvNowPlaying.visibility = View.GONE
-
                 }
             }
             override fun onPartialResults(p: Bundle?) {}
